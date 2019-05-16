@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.pitvstick" name="PiTVStick" version="1.0.0" provider-name="David Moralles">
+<addon id="plugin.video.pitvstick" name="PiTVStick" version="1.0.0" provider-name="PiTVStick">
   <requires>
       <import addon="xbmc.python" version="2.25.0"/>
       <import addon="script.module.requests" version="2.9.1"/>
   </requires>
-  <extension point="xbmc.python.pluginsource" library="main.py">
+  <extension point="xbmc.python.pluginsource" library="addon.py">
         <provides>video</provides>
   </extension>
   <extension point="xbmc.addon.metadata">
     <platform>all</platform>
-    <summary lang="en_GB">Crackle delivers popular, award-winning TV, movies and originals. With no limit to how much you can watch across all your devices, you can binge all you want, wherever you want.</summary>
-    <description lang="en_GB">Crackle is a video streaming distributor of original web shows, Hollywood movies, and TV shows. Founded in the early 2000s as Grouper, and rebranded in 2007, Crackle is owned by Sony Pictures Entertainment.</description>
-    <disclaimer lang="en_GB"></disclaimer>
+    <summary lang="es_MX">Servicio de transmisión PiTVStick.</summary>
+    <description lang="es_MX">PiTVStick es un servicio de transmisión de películas, series, canales de televisión abierta y televisión por cable en idioma latino, sin límite de dispositivos.</description>
+    <disclaimer lang="es_MX"></disclaimer>
       <news>
         - Fix for upstream changes
       </news>
-    <language>en</language>
+    <language>es</language>
     <platform>all</platform>
-    <license>GNU GENERAL PUBLIC LICENSE. Version 2, June 1991</license>
+    <license>GNU GENERAL PUBLIC LICENSE. Version 2</license>
     <forum></forum>
-    <source>https://github.com/eracknaphobia/plugin.video.crackle</source>
+    <source>https://github.com/eltantillo/plugin.video.pitvstick</source>
   </extension>
 </addon>

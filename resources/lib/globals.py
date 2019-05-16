@@ -25,6 +25,7 @@ BASE_URL = 'https://androidtv-api-us.crackle.com/Service.svc'
 def main_menu():
     add_dir('Movies', 'movies', 99, ICON)
     add_dir('TV', 'shows', 99, ICON)
+    add_stream("Peli","http://161.0.157.5/PLTV/88888888/224/3221227026/03.m3u8",'movies',ICON,FANART,{"plot": "Test plot"})
 
 
 def list_movies(genre_id):
@@ -173,14 +174,14 @@ def get_auth(url):
 
 def add_stream(name, id, stream_type, icon, fanart, info=None):
     ok = True
-    u=sys.argv[0]+"?id="+urllib.quote_plus(id)+"&mode="+str(103)+"&type="+urllib.quote_plus(stream_type)
+    u=id
+    #u=sys.argv[0]+"?id="+urllib.quote_plus(id)+"&mode="+str(103)+"&type="+urllib.quote_plus(stream_type)
     liz=xbmcgui.ListItem(name)
     if fanart == None: fanart = FANART
     liz.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart})
     liz.setProperty("IsPlayable", "true")
     liz.setInfo(type="Video", infoLabels={"Title": name})
-    if info is not None:
-        liz.setInfo( type="Video", infoLabels=info)
+    liz.setInfo( type="Video", infoLabels=info)
     ok = xbmcplugin.addDirectoryItem(handle=addon_handle,url=u,listitem=liz,isFolder=False)
     xbmcplugin.setContent(addon_handle, stream_type)
     return ok
