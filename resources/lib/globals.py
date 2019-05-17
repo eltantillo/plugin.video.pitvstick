@@ -1,7 +1,6 @@
+# -*- coding: utf-8 -*-
 import sys, os
-import urllib, requests
-import base64, hmac, hashlib
-from time import gmtime, strftime
+import urllib
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
 
 addon_handle = int(sys.argv[1])
@@ -10,167 +9,102 @@ ROOTDIR = ADDON.getAddonInfo('path')
 FANART = os.path.join(ROOTDIR,"resources","media","fanart.jpg")
 ICON = os.path.join(ROOTDIR,"resources","media","icon.png")
 
-
-# Addon Settings
-LOCAL_STRING = ADDON.getLocalizedString
-UA_CRACKLE = 'Crackle/7.60 CFNetwork/808.3 Darwin/16.3.0'
-UA_WEB = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.110 Safari/537.36'
-UA_ANDROID = 'Android 4.1.1; E270BSA; Crackle 4.4.5.0'
-#PARTNER_KEY = 'TUlSTlBTRVpZREFRQVNMWA=='
-PARTNER_KEY = 'Vk5aUUdYV0ZIVFBNR1ZWVg=='
-PARTNER_ID = '77'
-BASE_URL = 'https://androidtv-api-us.crackle.com/Service.svc'
-
-
 def main_menu():
-    add_dir('Movies', 'movies', 99, ICON)
-    add_dir('TV', 'shows', 99, ICON)
+    add_dir('Televisión', 'tvshows', 'tv', ICON)
+    add_dir('Películas', 'movies', 'movies', ICON)
+    add_dir('Series', 'tvshows', 'series', ICON)
+    add_dir('Anime', 'movies', 'anime', ICON)
+    add_dir('Adultos', 'movies', 'adults', ICON)
+
+def tv_menu():
+    add_dir('Televisión abierta', 'tvshows', 'openTv', ICON)
+    add_dir('Televisión por cable', 'tvshows', 'cableTv', ICON)
+
+def anime_menu():
+    add_dir('Series', 'tvshows', 'animeSeries', ICON)
+    add_dir('Películas', 'movies', 'animeMovies', ICON)
+
+def get_open_tv_channels():
+    response = urllib.urlopen('http://158.69.201.210/pitvstick/openTv.txt')
+    lines = response.readlines()
+    for line in lines:
+        data = line.split(" | ")
+        info = {'plot':data[3]}
+
+        add_stream(data[0],data[1],'tvshows',data[2],FANART,info)
+
+def get_cable_tv_channels():
+    response = urllib.urlopen('http://158.69.201.210/pitvstick/cableTv.txt')
+    lines = response.readlines()
+    for line in lines:
+        data = line.split(" | ")
+        info = {'plot':data[3]}
+
+        add_stream(data[0],data[1],'tvshows',data[2],FANART,info)
+
+def get_movies():
+    response = urllib.urlopen('http://158.69.201.210/pitvstick/movies.txt')
+    lines = response.readlines()
+    for line in lines:
+        data = line.split(" | ")
+        info = {'originaltitle':data[1],
+                'plot':data[4],
+                'genre':data[5],
+                'year':data[6],
+                'title':data[0],
+                'duration':data[7],
+                #'mpaa':movie['Rating'],
+                }
+
+        add_stream(data[0],data[2],'movies',data[3],FANART,info)
+
+def get_anime_movies():
+    response = urllib.urlopen('http://158.69.201.210/pitvstick/animeMovies.txt')
+    lines = response.readlines()
+    for line in lines:
+        data = line.split(" | ")
+        info = {'originaltitle':data[1],
+                'plot':data[4],
+                'genre':data[5],
+                'year':data[6],
+                'title':data[0],
+                'duration':data[7],
+                #'mpaa':movie['Rating'],
+                }
+
+        add_stream(data[0],data[2],'movies',data[3],FANART,info)
+
+def get_adults():
     add_stream("Peli","http://161.0.157.5/PLTV/88888888/224/3221227026/03.m3u8",'movies',ICON,FANART,{"plot": "Test plot"})
 
+def series_menu():
+    response = urllib.urlopen('http://158.69.201.210/pitvstick/series.txt')
+    lines = response.readlines()
+    for line in lines:
+        data = line.split(" | ")
+        add_dir(data[0], 'episodes', data[2], data[3], FANART, data[4], data[5])
 
-def list_movies(genre_id):
-    url = '/browse/movies/full/%s/alpha-asc/US?format=json' % genre_id
-    # url = '/browse/movies/full/all/alpha-asc/US'
-    # url += '?pageSize=500'
-    # url += '&pageNumber=1'
-    # url += '&format=json'
-    json_source = json_request(url)
+def anime_series_menu():
+    response = urllib.urlopen('http://158.69.201.210/pitvstick/animeSeries.txt')
+    lines = response.readlines()
+    for line in lines:
+        data = line.split(" | ")
+        add_dir(data[0], 'episodes', data[2], data[3], FANART, data[4], data[5])
 
-    for movie in json_source['Entries']:
-        title = movie['Title']
-        url = str(movie['ID'])
-        icon = movie['ChannelArtTileLarge']
-        fanart = movie['Images']['Img_1920x1080']
-        info = {'plot':movie['Description'],
-                'genre':movie['Genre'],
-                'year':movie['ReleaseYear'],
-                'mpaa':movie['Rating'],
-                'title':title,
-                'originaltitle':title,
-                'duration':movie['DurationInSeconds']
+def get_series_chapters(serie_id):
+    response = urllib.urlopen('http://158.69.201.210/pitvstick/chapters/{}.txt'.format(serie_id))
+    lines = response.readlines()
+    for line in lines:
+        data = line.split(" | ")
+        info = {'plot':data[3],
+                'genre':data[4],
+                'year':data[5],
+                'title':data[0],
+                'duration':data[6],
+                #'mpaa':movie['Rating'],
                 }
 
-        add_stream(title,url,'movies',icon,fanart,info)
-
-
-def list_genre(id):
-    url = '/genres/%s/all/US?format=json' % id
-    json_source = json_request(url)
-    for genre in json_source['Items']:
-        title = genre['Name']
-
-        add_dir(title, id, 100, ICON, genre_id=genre['ID'])
-        # add_dir(name, id, mode, icon, fanart=None, info=None, genre_id=None)
-
-
-def list_shows(genre_id):
-    url = '/browse/shows/full/%s/alpha-asc/US/1000/1?format=json' % genre_id
-    # url += '?pageSize=500'
-    # url += '&pageNumber=1'
-    # url += '&format=json'
-    json_source = json_request(url)
-
-    for show in json_source['Entries']:
-        title = show['Title']
-        url = str(show['ID'])
-        icon = show['ChannelArtTileLarge']
-        fanart = show['Images']['Img_1920x1080']
-        info = {'plot':show['Description'],
-                'genre':show['Genre'],
-                'year':show['ReleaseYear'],
-                'mpaa':show['Rating'],
-                'title':title,
-                'originaltitle':title,
-                'duration':show['DurationInSeconds']
-                }
-
-        add_dir(title,url,102,icon,fanart,info)
-
-
-def get_episodes(channel):
-    url = '/channel/'+channel+'/playlists/all/US?format=json'
-    json_source = json_request(url)
-
-    for episode in json_source['Playlists'][0]['Items']:
-        episode = episode['MediaInfo']
-        title = episode['Title']
-        id = str(episode['Id'])
-        icon = episode['Images']['Img_460x460']
-        fanart = episode['Images']['Img_1920x1080']
-        info = None
-        info = {'plot':episode['Description'],
-                #'genre':episode['Genre'],
-                'year':episode['ReleaseYear'],
-                'mpaa':episode['Rating'],
-                'title':title,
-                'originaltitle':title,
-                'duration':episode['Duration'],
-                'season':episode['Season'],
-                'episode':episode['Episode']
-                }
-
-        add_stream(title,id,'tvshows',icon,fanart,info)
-
-
-def get_movie_id(channel):
-    url = '/channel/'+str(channel)+'/playlists/all/US?format=json'
-    json_source = json_request(url)
-
-    return str(json_source['Playlists'][0]['Items'][0]['MediaInfo']['Id'])
-
-
-def get_stream(id):
-    url = '/details/media/'+id+'/US?format=json'
-    json_source = json_request(url)
-
-    for stream in json_source['MediaURLs']:
-        # if 'AppleTV' in stream['Type']:
-        if '480p_1mbps.mp4' in stream['Type']:
-            stream_url = stream['Path']
-            # stream_url = stream_url[0:stream_url.index('.m3u8')]+'.m3u8'
-            break
-
-    headers = '|User-Agent='+UA_CRACKLE
-    listitem = xbmcgui.ListItem()
-    # if xbmc.getCondVisibility('System.HasAddon(inputstream.adaptive)'):
-    #     listitem.setProperty('inputstreamaddon', 'inputstream.adaptive')
-    #     listitem.setProperty('inputstream.adaptive.manifest_type', 'hls')
-    #     listitem.setProperty('inputstream.adaptive.stream_headers', headers)
-    #     listitem.setProperty('inputstream.adaptive.license_key', headers)
-    # else:
-    stream_url += headers
-
-    listitem.setPath(stream_url)
-    xbmcplugin.setResolvedUrl(addon_handle, True, listitem)
-
-
-def json_request(url):
-    url = BASE_URL + url
-    xbmc.log(url)
-    headers = {
-        'Connection': 'keep-alive',
-        'User-Agent': UA_ANDROID,
-        'Authorization': get_auth(url),
-        'X-Requested-With': 'com.crackle.androidtv'
-    }
-
-    r = requests.get(url, headers=headers, verify=False)
-
-    return r.json()
-
-
-def calc_hmac(src):
-    # return hmac.new(base64.b64decode(PARTNER_KEY), src, hashlib.md5).hexdigest()
-    return hmac.new(base64.b64decode(PARTNER_KEY), src, hashlib.sha1).hexdigest()
-
-
-def get_auth(url):
-    timestamp = strftime('%Y%m%d%H%M', gmtime())
-    # encoded_url = str(calc_hmac(url+"|"+timestamp)).upper() + "|" + timestamp + "|" + PARTNER_ID
-    encoded_url = '%s|%s|%s|1' % (calc_hmac(url + "|" + timestamp).upper(), timestamp, PARTNER_ID)
-
-    return encoded_url
-
+        add_stream(data[0],data[1],'episodes',data[2],FANART,info)
 
 def add_stream(name, id, stream_type, icon, fanart, info=None):
     ok = True
@@ -187,7 +121,7 @@ def add_stream(name, id, stream_type, icon, fanart, info=None):
     return ok
 
 
-def add_dir(name, id, mode, icon, fanart=None, info=None, genre_id=None):
+def add_dir(name, mode, id, icon, fanart=None, info=None, genre_id=None):
     xbmc.log(ROOTDIR)
     xbmc.log("ICON IMAGE = "+icon)
     ok = True
@@ -201,7 +135,6 @@ def add_dir(name, id, mode, icon, fanart=None, info=None, genre_id=None):
     ok = xbmcplugin.addDirectoryItem(handle=addon_handle,url=u,listitem=liz,isFolder=True)
     xbmcplugin.setContent(addon_handle, 'tvshows')
     return ok
-
 
 def get_params():
     param=[]
