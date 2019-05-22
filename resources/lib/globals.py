@@ -4,107 +4,144 @@ import urllib
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
 
 addon_handle = int(sys.argv[1])
-ADDON = xbmcaddon.Addon()
+
+ADDON   = xbmcaddon.Addon()
 ROOTDIR = ADDON.getAddonInfo('path')
-FANART = os.path.join(ROOTDIR,"resources","media","fanart.jpg")
-ICON = os.path.join(ROOTDIR,"resources","media","icon.png")
+FANART  = os.path.join(ROOTDIR,"resources","media","fanart.jpg")
+ICON    = os.path.join(ROOTDIR,"resources","media","icon.png")
+URL     = 'http://158.69.201.210/pitvstick/'
 
 def main_menu():
-    add_dir('Televisión', 'tvshows', 'tv', ICON)
-    add_dir('Películas', 'movies', 'movies', ICON)
-    add_dir('Series', 'tvshows', 'series', ICON)
-    add_dir('Anime', 'movies', 'anime', ICON)
-    add_dir('Adultos', 'movies', 'adults', ICON)
+    add_dir('Televisión', 'tvshows', 'tv', ICON, FANART)
+    add_dir('Películas', 'movies', 'movies', ICON, FANART)
+    add_dir('Series', 'tvshows', 'series', ICON, FANART)
+    add_dir('Anime', 'movies', 'anime', ICON, FANART)
+    add_dir('Adultos', 'movies', 'adults', ICON, FANART)
 
 def tv_menu():
-    add_dir('Televisión abierta', 'tvshows', 'openTv', ICON)
-    add_dir('Televisión por cable', 'tvshows', 'cableTv', ICON)
+    add_dir('Televisión abierta', 'tvshows', 'openTv', ICON, FANART)
+    add_dir('Televisión por cable', 'tvshows', 'cableTv', ICON, FANART)
 
 def anime_menu():
-    add_dir('Series', 'tvshows', 'animeSeries', ICON)
-    add_dir('Películas', 'movies', 'animeMovies', ICON)
+    add_dir('Series', 'tvshows', 'animeSeries', ICON, FANART)
+    add_dir('Películas', 'movies', 'animeMovies', ICON, FANART)
 
-def get_open_tv_channels():
-    response = urllib.urlopen('http://158.69.201.210/pitvstick/openTv.txt')
+def get_tv_channels(cable=False):
+    tv_url = 'tv.php'
+    if cable:
+        tv_url += '?cable'
+    response = urllib.urlopen(URL + tv_url)
     lines = response.readlines()
     for line in lines:
         data = line.split(" | ")
-        info = {'plot':data[3]}
-
-        add_stream(data[0],data[1],'tvshows',data[2],FANART,info)
-
-def get_cable_tv_channels():
-    response = urllib.urlopen('http://158.69.201.210/pitvstick/cableTv.txt')
-    lines = response.readlines()
-    for line in lines:
-        data = line.split(" | ")
-        info = {'plot':data[3]}
-
-        add_stream(data[0],data[1],'tvshows',data[2],FANART,info)
-
-def get_movies():
-    response = urllib.urlopen('http://158.69.201.210/pitvstick/movies.txt')
-    lines = response.readlines()
-    for line in lines:
-        data = line.split(" | ")
-        info = {'originaltitle':data[1],
+        info = {'originaltitle':data[0],
                 'plot':data[4],
-                'genre':data[5],
-                'year':data[6],
-                'title':data[0],
-                'duration':data[7],
+                #'mpaa':data[5],
+                }
+
+        add_stream(data[0],data[1],'tvshows',data[2],data[3],info)
+
+def get_movies(anime=False, search=None):
+    anime_str = ''
+    if anime:
+        anime_str = 'Anime'
+    add_dir('Buscar películas', 'movies', 'search{}Movies'.format(anime_str), ICON, FANART)
+
+    movies_url = 'movies.php'
+    if anime:
+        movies_url += '?anime'
+    if search:
+        if anime:
+            movies_url += '&'
+        else:
+            movies_url += '?'
+        movies_url += 'search=' + search
+
+    response = urllib.urlopen(URL + movies_url)
+    lines = response.readlines()
+    for line in lines:
+        data = line.split(" | ")
+        info = {'title':data[0],
+                'originaltitle':data[1],
+                'plot':data[5],
+                'genre':data[6],
+                'year':data[7],
+                'duration':data[8],
                 #'mpaa':movie['Rating'],
                 }
 
-        add_stream(data[0],data[2],'movies',data[3],FANART,info)
+        add_stream(data[0],data[2],'movies',data[3], data[4], info)
 
-def get_anime_movies():
-    response = urllib.urlopen('http://158.69.201.210/pitvstick/animeMovies.txt')
-    lines = response.readlines()
-    for line in lines:
-        data = line.split(" | ")
-        info = {'originaltitle':data[1],
-                'plot':data[4],
-                'genre':data[5],
-                'year':data[6],
-                'title':data[0],
-                'duration':data[7],
-                #'mpaa':movie['Rating'],
-                }
-
-        add_stream(data[0],data[2],'movies',data[3],FANART,info)
+def search_movies(anime=False):
+    search = get_string('Buscar Película')
+    get_movies(anime, search)
 
 def get_adults():
     add_stream("Peli","http://161.0.157.5/PLTV/88888888/224/3221227026/03.m3u8",'movies',ICON,FANART,{"plot": "Test plot"})
 
-def series_menu():
-    response = urllib.urlopen('http://158.69.201.210/pitvstick/series.txt')
-    lines = response.readlines()
-    for line in lines:
-        data = line.split(" | ")
-        add_dir(data[0], 'episodes', data[2], data[3], FANART, data[4], data[5])
+def series_menu(anime=False, search=None):
+    anime_str = ''
+    if anime:
+        anime_str = 'Anime'
+    add_dir('Buscar series', 'tvshows', 'search{}Series'.format(anime_str), ICON, FANART)
 
-def anime_series_menu():
-    response = urllib.urlopen('http://158.69.201.210/pitvstick/animeSeries.txt')
-    lines = response.readlines()
-    for line in lines:
-        data = line.split(" | ")
-        add_dir(data[0], 'episodes', data[2], data[3], FANART, data[4], data[5])
+    series_url = 'series.php'
+    if anime:
+        series_url += '?anime'
+    if search:
+        if anime:
+            series_url += '&'
+        else:
+            series_url += '?'
+        series_url += 'search=' + search
 
-def get_series_chapters(serie_id):
-    response = urllib.urlopen('http://158.69.201.210/pitvstick/chapters/{}.txt'.format(serie_id))
+    response = urllib.urlopen(URL + series_url)
     lines = response.readlines()
     for line in lines:
         data = line.split(" | ")
-        info = {'plot':data[3],
-                'genre':data[4],
+        info = {'title':data[1],
+                'originaltitle':data[2],
+                'plot':data[5],
+                'genre':data[6],
+                #'year':data[5],
+                #'duration':data[6],
+                #'mpaa':data[7],
+                }
+        add_dir(data[1], 'tvshows', 'seasons', data[3], data[4], info, data[0])
+        #add_dir(name, mode, id, icon, fanart=None, info=None, media_id=None):
+
+def search_series(anime=False):
+    search = get_string('Buscar Serie')
+    series_menu(anime, search)
+
+def get_series_seasons(serie):
+    seasons_url = 'seasons.php?id={}'.format(serie)
+    response = urllib.urlopen(URL + seasons_url)
+    lines = response.readlines()
+
+    if len(lines) == 1:
+        data = lines[0].split(" | ")
+        get_series_chapters(data[0])
+    else:
+        for line in lines:
+            data = line.split(" | ")
+            add_dir('Temporada {}'.format(data[1]), 'episodes', 'seasons', ICON, FANART, {}, data[0])
+
+def get_series_chapters(season):
+    chapters_url = 'chapters.php?id={}'.format(season)
+    response = urllib.urlopen(URL + chapters_url)
+    lines = response.readlines()
+    for line in lines:
+        data = line.split(" | ")
+        info = {'title':data[0],
+                'plot':data[4],
+                #'genre':data[4],
                 'year':data[5],
-                'title':data[0],
                 'duration':data[6],
                 #'mpaa':movie['Rating'],
                 }
 
-        add_stream(data[0],data[1],'episodes',data[2],FANART,info)
+        add_stream(data[0],data[1],'episodes',data[2],data[3],info)
 
 def add_stream(name, id, stream_type, icon, fanart, info=None):
     ok = True
@@ -121,12 +158,12 @@ def add_stream(name, id, stream_type, icon, fanart, info=None):
     return ok
 
 
-def add_dir(name, mode, id, icon, fanart=None, info=None, genre_id=None):
+def add_dir(name, mode, id, icon, fanart=None, info=None, media_id=None):
     xbmc.log(ROOTDIR)
     xbmc.log("ICON IMAGE = "+icon)
     ok = True
     u = sys.argv[0]+"?id="+urllib.quote_plus(id)+"&mode="+str(mode)
-    if genre_id is not None: u += "&genre_id=%s" % genre_id
+    if media_id is not None: u += "&media_id=%s" % media_id
     liz=xbmcgui.ListItem(name)
     if fanart is not None: fanart = FANART
     liz.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart})
@@ -153,3 +190,29 @@ def get_params():
                             param[splitparams[0]]=splitparams[1]
 
     return param
+
+def get_pass():
+    if xbmcplugin.getSetting(addon_handle, 'password') == '':
+        return(True)
+
+    success = False
+    pass_input = get_string('Clave control parental')
+    if pass_input == xbmcplugin.getSetting(addon_handle, 'password'):
+        success = True
+    else:
+        xbmc.executebuiltin('Notification(Control parental, La clave es incorrecta, 5000)')
+
+    return(success)
+
+def get_string(heading):
+    input = ''
+    kb = xbmc.Keyboard('default', 'heading', True)
+    kb.setDefault('')
+    kb.setHeading(heading)
+    kb.setHiddenInput(False)
+    kb.doModal()
+
+    if (kb.isConfirmed()):
+        input = kb.getText()
+
+    return input

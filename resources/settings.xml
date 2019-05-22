@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
-  <!-- General -->
+    <category label="Cuenta">
+        <setting label="Número de teléfono" type="text" id="phone" default=""/>
+        <setting label="Clave control parental" type="text" id="password" option="hidden"  enable="!eq(-1,)" default=""/>
+    </category>
 </settings>

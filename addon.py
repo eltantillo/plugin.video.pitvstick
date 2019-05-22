@@ -2,38 +2,52 @@
 from resources.lib.globals import *
 
 params = get_params()
-media_id = None
+id = None
 mode = None
+media_id = None
 
 if 'id' in params:
-    media_id = urllib.unquote_plus(params["id"])
+    id = urllib.unquote_plus(params["id"])
 if 'mode' in params:
     mode = params["mode"]
+if 'media_id' in params:
+    media_id = params["media_id"]
 
 if mode is None:
     main_menu()
 
 elif mode == 'tvshows':
-    if media_id == 'tv':
+    if id == 'tv':
         tv_menu()
-    elif media_id == 'series':
+    elif id == 'series':
         series_menu()
-    elif media_id == 'openTv':
-        get_open_tv_channels()
-    elif media_id == 'cableTv':
-        get_cable_tv_channels()
-    elif media_id == 'animeSeries':
-        anime_series_menu()
+    elif id == 'searchSeries':
+        search_series()
+    elif id == 'openTv':
+        get_tv_channels()
+    elif id == 'cableTv':
+        get_tv_channels(True)
+    elif id == 'animeSeries':
+        series_menu(True)
+    elif id == 'searchAnimeSeries':
+        search_series(True)
+    elif id == 'seasons':
+        get_series_seasons(media_id)
 
 elif mode == 'movies':
-    if media_id == 'movies':
+    if id == 'movies':
         get_movies()
-    elif media_id == 'anime':
+    elif id == 'searchMovies':
+        search_movies()
+    elif id == 'anime':
         anime_menu()
-    elif media_id == 'adults':
-        get_adults()
-    elif media_id == 'animeMovies':
-        get_anime_movies()
+    elif id == 'searchAnimeMovies':
+        search_movies(True)
+    elif id == 'adults':
+        if get_pass():
+            get_adults()
+    elif id == 'animeMovies':
+        get_movies(True)
 
 elif mode == 'episodes':
     get_series_chapters(media_id)
