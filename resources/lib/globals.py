@@ -7,24 +7,32 @@ addon_handle = int(sys.argv[1])
 
 ADDON   = xbmcaddon.Addon()
 ROOTDIR = ADDON.getAddonInfo('path')
+
 FANART  = os.path.join(ROOTDIR,"resources","media","fanart.jpg")
 ICON    = os.path.join(ROOTDIR,"resources","media","icon.png")
+SEARCH  = os.path.join(ROOTDIR,"resources","media","search.png")
+MOVIES  = os.path.join(ROOTDIR,"resources","media","movies.png")
+TV      = os.path.join(ROOTDIR,"resources","media","tv.png")
+SERIES  = os.path.join(ROOTDIR,"resources","media","series.png")
+ANIME   = os.path.join(ROOTDIR,"resources","media","anime.png")
+ADULTS  = os.path.join(ROOTDIR,"resources","media","adults.png")
+
 URL     = 'http://158.69.201.210/pitvstick/'
 
 def main_menu():
-    add_dir('Televisión', 'tvshows', 'tv', ICON, FANART)
-    add_dir('Películas', 'movies', 'movies', ICON, FANART)
-    add_dir('Series', 'tvshows', 'series', ICON, FANART)
-    add_dir('Anime', 'movies', 'anime', ICON, FANART)
-    add_dir('Adultos', 'movies', 'adults', ICON, FANART)
+    add_dir('Televisión', 'tvshows', 'tv', TV, FANART)
+    add_dir('Películas', 'movies', 'movies', MOVIES, FANART)
+    add_dir('Series', 'tvshows', 'series', SERIES, FANART)
+    add_dir('Anime', 'movies', 'anime', ANIME, FANART)
+    # add_dir('Adultos', 'movies', 'adults', ADULTS, FANART)
 
 def tv_menu():
-    add_dir('Televisión abierta', 'tvshows', 'openTv', ICON, FANART)
-    add_dir('Televisión por cable', 'tvshows', 'cableTv', ICON, FANART)
+    add_dir('Televisión abierta', 'tvshows', 'openTv', TV, FANART)
+    add_dir('Televisión por cable', 'tvshows', 'cableTv', TV, FANART)
 
 def anime_menu():
-    add_dir('Series', 'tvshows', 'animeSeries', ICON, FANART)
-    add_dir('Películas', 'movies', 'animeMovies', ICON, FANART)
+    add_dir('Películas', 'movies', 'animeMovies', MOVIES, FANART)
+    add_dir('Series', 'tvshows', 'animeSeries', SERIES, FANART)
 
 def get_tv_channels(cable=False):
     tv_url = 'tv.php'
@@ -45,7 +53,7 @@ def get_movies(anime=False, search=None):
     anime_str = ''
     if anime:
         anime_str = 'Anime'
-    add_dir('Buscar películas', 'movies', 'search{}Movies'.format(anime_str), ICON, FANART)
+    add_dir('Buscar películas', 'movies', 'search{}Movies'.format(anime_str), SEARCH, FANART)
 
     movies_url = 'movies.php'
     if anime:
@@ -83,7 +91,7 @@ def series_menu(anime=False, search=None):
     anime_str = ''
     if anime:
         anime_str = 'Anime'
-    add_dir('Buscar series', 'tvshows', 'search{}Series'.format(anime_str), ICON, FANART)
+    add_dir('Buscar series', 'tvshows', 'search{}Series'.format(anime_str), SEARCH, FANART)
 
     series_url = 'series.php'
     if anime:
