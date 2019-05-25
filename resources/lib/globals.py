@@ -7,24 +7,33 @@ addon_handle = int(sys.argv[1])
 
 ADDON   = xbmcaddon.Addon()
 ROOTDIR = ADDON.getAddonInfo('path')
+
 FANART  = os.path.join(ROOTDIR,"resources","media","fanart.jpg")
 ICON    = os.path.join(ROOTDIR,"resources","media","icon.png")
+SEARCH  = os.path.join(ROOTDIR,"resources","media","search.png")
+MOVIES  = os.path.join(ROOTDIR,"resources","media","movies.png")
+TV      = os.path.join(ROOTDIR,"resources","media","tv.png")
+SERIES  = os.path.join(ROOTDIR,"resources","media","series.png")
+ANIME   = os.path.join(ROOTDIR,"resources","media","anime.png")
+ADULTS  = os.path.join(ROOTDIR,"resources","media","adults.png")
+
 URL     = 'http://158.69.201.210/pitvstick/'
 
 def main_menu():
-    add_dir('Televisión', 'tvshows', 'tv', ICON, FANART)
-    add_dir('Películas', 'movies', 'movies', ICON, FANART)
-    add_dir('Series', 'tvshows', 'series', ICON, FANART)
-    add_dir('Anime', 'movies', 'anime', ICON, FANART)
-    add_dir('Adultos', 'movies', 'adults', ICON, FANART)
+    add_dir('Televisión', 'tvshows', 'tv', TV, FANART)
+    add_dir('Películas', 'movies', 'movies', MOVIES, FANART)
+    add_dir('Series', 'tvshows', 'series', SERIES, FANART)
+    add_dir('Anime', 'movies', 'anime', ANIME, FANART)
+    if xbmcplugin.getSetting(addon_handle, 'password') != '':
+        add_dir('Adultos', 'movies', 'adults', ADULTS, FANART)
 
 def tv_menu():
-    add_dir('Televisión abierta', 'tvshows', 'openTv', ICON, FANART)
-    add_dir('Televisión por cable', 'tvshows', 'cableTv', ICON, FANART)
+    add_dir('Televisión abierta', 'tvshows', 'openTv', TV, FANART)
+    add_dir('Televisión por cable', 'tvshows', 'cableTv', TV, FANART)
 
 def anime_menu():
-    add_dir('Series', 'tvshows', 'animeSeries', ICON, FANART)
-    add_dir('Películas', 'movies', 'animeMovies', ICON, FANART)
+    add_dir('Películas', 'movies', 'animeMovies', MOVIES, FANART)
+    add_dir('Series', 'tvshows', 'animeSeries', SERIES, FANART)
 
 def get_tv_channels(cable=False):
     tv_url = 'tv.php'
@@ -45,12 +54,12 @@ def get_movies(anime=False, search=None):
     anime_str = ''
     if anime:
         anime_str = 'Anime'
-    add_dir('Buscar películas', 'movies', 'search{}Movies'.format(anime_str), ICON, FANART)
+    add_dir('Buscar películas', 'movies', 'search{}Movies'.format(anime_str), SEARCH, FANART)
 
     movies_url = 'movies.php'
     if anime:
         movies_url += '?anime'
-    if search:
+    if search != None:
         if anime:
             movies_url += '&'
         else:
@@ -77,18 +86,28 @@ def search_movies(anime=False):
     get_movies(anime, search)
 
 def get_adults():
-    add_stream("Peli","http://161.0.157.5/PLTV/88888888/224/3221227026/03.m3u8",'movies',ICON,FANART,{"plot": "Test plot"})
+    tv_url = 'tv.php?cable&adults'
+    response = urllib.urlopen(URL + tv_url)
+    lines = response.readlines()
+    for line in lines:
+        data = line.split(" | ")
+        info = {'originaltitle':data[0],
+                'plot':data[4],
+                #'mpaa':data[5],
+                }
+
+        add_stream(data[0],data[1],'tvshows',data[2],data[3],info)
 
 def series_menu(anime=False, search=None):
     anime_str = ''
     if anime:
         anime_str = 'Anime'
-    add_dir('Buscar series', 'tvshows', 'search{}Series'.format(anime_str), ICON, FANART)
+    add_dir('Buscar series', 'tvshows', 'search{}Series'.format(anime_str), SEARCH, FANART)
 
     series_url = 'series.php'
     if anime:
         series_url += '?anime'
-    if search:
+    if search != None:
         if anime:
             series_url += '&'
         else:
@@ -196,7 +215,7 @@ def get_pass():
         return(True)
 
     success = False
-    pass_input = get_string('Clave control parental')
+    pass_input = get_string('Clave control parental', True)
     if pass_input == xbmcplugin.getSetting(addon_handle, 'password'):
         success = True
     else:
@@ -204,12 +223,12 @@ def get_pass():
 
     return(success)
 
-def get_string(heading):
+def get_string(heading, password=False):
     input = ''
     kb = xbmc.Keyboard('default', 'heading', True)
     kb.setDefault('')
     kb.setHeading(heading)
-    kb.setHiddenInput(False)
+    kb.setHiddenInput(password)
     kb.doModal()
 
     if (kb.isConfirmed()):
