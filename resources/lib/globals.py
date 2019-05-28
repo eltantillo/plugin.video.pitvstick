@@ -30,7 +30,7 @@ def main_menu():
 
 def tv_menu():
     add_dir('Televisión abierta', 'tvshows', 'openTv', TV, FANART)
-    add_dir('Televisión por cable', 'tvshows', 'cableTv', TV, FANART)
+    add_dir('Televisión de paga', 'tvshows', 'cableTv', TV, FANART)
 
 def anime_menu():
     add_dir('Películas', 'movies', 'animeMovies', MOVIES, FANART)
