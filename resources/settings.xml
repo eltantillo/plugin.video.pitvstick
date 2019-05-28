@@ -2,6 +2,6 @@
 <settings>
     <category label="Cuenta">
         <setting label="Número de teléfono" type="text" id="phone" default=""/>
-        <setting label="Clave control parental" type="text" id="password" option="hidden"  enable="!eq(-1,)" default=""/>
+        <setting label="Clave control parental" type="text" id="password" option="hidden" default=""/>
     </category>
 </settings>
