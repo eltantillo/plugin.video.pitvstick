@@ -3,16 +3,24 @@ import sys, os
 import urllib
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
 
+file_xml = xbmc.translatePath("special://profile/keymaps/pitvstick.xml")
+if not(os.path.isfile(file_xml)):
+    f = open(file_xml, "w")
+    f.write('<?xml version="1.0" encoding="UTF-8"?><keymap><FullscreenVideo><keyboard><backspace>Stop</backspace><backspace mod="longpress">FullScreen</backspace><escape>Stop</escape><escape mod="longpress">FullScreen</escape></keyboard></FullscreenVideo></keymap>')
+    f.close()
+
 addon_handle = int(sys.argv[1])
 
 ADDON   = xbmcaddon.Addon()
 ROOTDIR = ADDON.getAddonInfo('path')
 
-FANART  = os.path.join(ROOTDIR,"resources","media","fanart.jpg")
+FANART = os.path.join(ROOTDIR,"resources","media","fanart.jpg")
+
 ICON    = os.path.join(ROOTDIR,"resources","media","icon.png")
 SEARCH  = os.path.join(ROOTDIR,"resources","media","search.png")
 MOVIES  = os.path.join(ROOTDIR,"resources","media","movies.png")
 TV      = os.path.join(ROOTDIR,"resources","media","tv.png")
+PAIDTV  = os.path.join(ROOTDIR,"resources","media","paidtv.png")
 SERIES  = os.path.join(ROOTDIR,"resources","media","series.png")
 ANIME   = os.path.join(ROOTDIR,"resources","media","anime.png")
 ADULTS  = os.path.join(ROOTDIR,"resources","media","adults.png")
@@ -30,7 +38,7 @@ def main_menu():
 
 def tv_menu():
     add_dir('Televisión abierta', 'tvshows', 'openTv', TV, FANART)
-    add_dir('Televisión de paga', 'tvshows', 'cableTv', TV, FANART)
+    add_dir('Televisión de paga', 'tvshows', 'cableTv', PAIDTV, FANART)
 
 def anime_menu():
     add_dir('Películas', 'movies', 'animeMovies', MOVIES, FANART)
@@ -57,7 +65,7 @@ def get_movies(anime=False, search=None, page=1):
     if anime:
         anime_str = 'Anime'
         movie_str = 'animeMovies'
-    add_dir('Buscar películas', 'movies', 'search{}Movies'.format(anime_str), SEARCH, FANART)
+    add_dir('Buscar películas...', 'movies', 'search{}Movies'.format(anime_str), SEARCH, FANART)
 
     movies_url = 'movies.php?page={}'.format(page)
     if anime:
@@ -78,13 +86,13 @@ def get_movies(anime=False, search=None, page=1):
                 #'mpaa':movie['Rating'],
                 }
 
-        add_stream(data[0],data[2],'movies',data[3], data[4], info)
+        add_stream(data[0],data[2],'movies', data[3], data[4], info)
 
     if len(lines) == 25:
-        add_dir('Siguiente', 'movies', movie_str, NEXT, FANART, page=int(page)+1)
+        add_dir('Cargar más...', 'movies', movie_str, NEXT, page=int(page)+1)
 
 def search_movies(anime=False, page=1):
-    search = get_string('Buscar Película')
+    search = get_string('Buscar Películas...')
     get_movies(anime, search, page)
 
 def get_adults():
@@ -106,7 +114,7 @@ def series_menu(anime=False, search=None, page=1):
     if anime:
         anime_str = 'Anime'
         serie_str = 'animeSeries'
-    add_dir('Buscar series', 'tvshows', 'search{}Series'.format(anime_str), SEARCH, FANART)
+    add_dir('Buscar series...', 'tvshows', 'search{}Series'.format(anime_str), SEARCH, FANART)
 
     series_url = 'series.php?page={}'.format(page)
     if anime:
@@ -129,10 +137,10 @@ def series_menu(anime=False, search=None, page=1):
         add_dir(data[1], 'tvshows', 'seasons', data[3], data[4], info, data[0])
 
     if len(lines) == 25:
-        add_dir('Siguiente', 'tvshows', serie_str, NEXT, FANART, page=int(page)+1)
+        add_dir('Cargar más...', 'tvshows', serie_str, NEXT, page=int(page)+1)
 
 def search_series(anime=False, page=1):
-    search = get_string('Buscar Serie')
+    search = get_string('Buscar Series...')
     series_menu(anime, search, page)
 
 def get_series_seasons(serie):
