@@ -2,6 +2,31 @@
 <settings>
     <category label="Cuenta">
         <setting label="Número de teléfono" type="text" id="phone" default=""/>
+    </category>
+    <category label="Control Parental">
+        <access>CheckMasterLock</access>
         <setting label="Clave control parental" type="text" id="password" option="hidden" default=""/>
+
+        <setting label="Seleccione la clasificación del contenido que desee bloquear" type="lsep"/>
+        <setting label="Clasificación AA"  type="bool" id="class_aa"  default="false" help="Todos los públicos pueden ver, aunque esta clasificación va dirigida a un público más pre-escolar; comprensible para niños de todas las edades."/>
+        <setting label="Clasificación A"   type="bool" id="class_a"   default="false" help="Mayores de 6 años e infantes menores de 6 acompañados de un adulto."/>
+        <setting label="Clasificación B"   type="bool" id="class_b"   default="false" help="Para mayores de 12 años, menores requieren supervisión. Clasificados programas con temáticas más interesantes para mayores de 12 años o poco atractivas para menores de 12 años."/>
+        <setting label="Clasificación B15" type="bool" id="class_b15" default="false" help="Para mayores de 15 años, menores requieren supervisión."/>
+        <setting label="Clasificación C"   type="bool" id="class_c"   default="true"  help="Para adultos, apto para mayores de 18 años."/>
+        <setting label="Clasificación D"   type="bool" id="class_d"   default="true"  help="Exclusivamente adultos. Esta clasificación es casi igual a la anterior, con la diferencia de que es aplicada a contenido con lenguaje soez sin censura, adicciones explícitas, mayor desnudez, violencia extrema y películas pornográficas."/>
+
+        <setting label="Seleccione los géneros que desee bloquear" type="lsep"/>
+        <setting label="Acción"       type="bool" id="accion"       default="false"/>
+        <setting label="Sobrenatural" type="bool" id="sobrenatural" default="false"/>
+        <setting label="Romance"      type="bool" id="romance"      default="false"/>
+        <setting label="Suspenso"     type="bool" id="suspenso"     default="false"/>
+        <setting label="Terror"       type="bool" id="terror"       default="true"/>
+        <setting label="Demonios"     type="bool" id="demonios"     default="true"/>
+        <setting label="Ecchi"        type="bool" id="ecchi"        default="true"/>
+        <setting label="Harem"        type="bool" id="harem"        default="true"/>
+        <setting label="Seinen"       type="bool" id="seinen"       default="true"/>
+        <setting label="Hentai"       type="bool" id="hentai"       default="true"/>
+        <setting label="Yuri"         type="bool" id="yuri"         default="true"/>
+        <setting label="Yaoi"         type="bool" id="yaoi"         default="true"/>
     </category>
 </settings>

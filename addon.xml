@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.pitvstick" name="PiTVStick" version="1.0.7" provider-name="PiTVStick">
+<addon id="plugin.video.pitvstick" name="PiTVStick" version="1.0.9" provider-name="PiTVStick">
   <requires>
       <import addon="xbmc.python" version="2.25.0"/>
       <import addon="script.module.requests" version="2.9.1"/>
@@ -19,6 +19,8 @@
         - [ADD] Movies and Series pagination
         - [ADD] Application images
         - [ADD] Video Stop on exit
+        - [FIX] Folder Fanart
+        - [ADD] Suspension of service by phone number
       </news>
     <language>es</language>
     <platform>all</platform>
