@@ -1,32 +1,37 @@
 # -*- coding: utf-8 -*-
 from resources.lib.globals import *
 
-
-
 params = get_params()
 id = None
 mode = None
 media_id = None
-page_id = 1
+page = 1
 adults = False
 
 if 'id' in params:
-    id = urllib.unquote_plus(params["id"])
+    id = params["id"]
 if 'mode' in params:
     mode = params["mode"]
 if 'media_id' in params:
     media_id = params["media_id"]
+if 'name' in params:
+    name = params["name"]
 if 'page' in params:
     page = params["page"]
 if 'adults' in params:
-    adults = urllib.unquote_plus(params["adults"])
+    adults = params["adults"]
 
 if mode is None:
     main_menu()
 
 elif mode == 'settings':
     open_settings()
-    main_menu()
+
+elif mode == 'play':
+    play_video(media_id)
+
+elif mode == 'download':
+    download_video(media_id, name, params["icon"], params["fanart"])
 
 elif mode == 'tvshows':
     if id == 'tv':
@@ -72,6 +77,8 @@ elif mode == 'movies':
         get_movies(page=page, adults=True)
     elif id == 'animeMoviesAdults':
         get_movies(anime=True, page=page, adults=True)
+    elif id == 'downloads':
+        get_downloads()
 
 elif mode == 'episodes':
     get_series_chapters(media_id)

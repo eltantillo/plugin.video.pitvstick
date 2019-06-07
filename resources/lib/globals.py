@@ -4,12 +4,17 @@ import urllib, time
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
 from datetime import datetime
 import rapidvideo
+import threading
 
-file_xml = xbmc.translatePath("special://profile/keymaps/pitvstick.xml")
-if not(os.path.isfile(file_xml)):
-    f = open(file_xml, "w")
+plugin_dir = xbmc.translatePath("special://home/addons/plugin.video.pitvstick/")
+videos_dir = os.path.expanduser("~") + '/videos/'
+keymap_xml   = xbmc.translatePath("special://profile/keymaps/pitvstick.xml")
+if not(os.path.isfile(keymap_xml)):
+    f = open(keymap_xml, "w")
     f.write('<?xml version="1.0" encoding="UTF-8"?><keymap><FullscreenVideo><keyboard><backspace>Stop</backspace><backspace mod="longpress">FullScreen</backspace><escape>Stop</escape><escape mod="longpress">FullScreen</escape></keyboard></FullscreenVideo></keymap>')
     f.close()
+if not(os.path.isdir(videos_dir)):
+    os.mkdir(videos_dir)
 
 addon_handle = int(sys.argv[1])
 
@@ -18,16 +23,17 @@ ROOTDIR = ADDON.getAddonInfo('path')
 
 FANART = os.path.join(ROOTDIR,"resources","media","fanart.jpg")
 
-ICON     = os.path.join(ROOTDIR,"resources","media","icon.png")
-SEARCH   = os.path.join(ROOTDIR,"resources","media","search.png")
-MOVIES   = os.path.join(ROOTDIR,"resources","media","movies.png")
-TV       = os.path.join(ROOTDIR,"resources","media","tv.png")
-PAIDTV   = os.path.join(ROOTDIR,"resources","media","paidtv.png")
-SERIES   = os.path.join(ROOTDIR,"resources","media","series.png")
-ANIME    = os.path.join(ROOTDIR,"resources","media","anime.png")
-ADULTS   = os.path.join(ROOTDIR,"resources","media","adults.png")
-NEXT     = os.path.join(ROOTDIR,"resources","media","next.png")
-SETTINGS = os.path.join(ROOTDIR,"resources","media","settings.png")
+ICON      = os.path.join(ROOTDIR,"resources","media","icon.png")
+SEARCH    = os.path.join(ROOTDIR,"resources","media","search.png")
+MOVIES    = os.path.join(ROOTDIR,"resources","media","movies.png")
+TV        = os.path.join(ROOTDIR,"resources","media","tv.png")
+PAIDTV    = os.path.join(ROOTDIR,"resources","media","paidtv.png")
+SERIES    = os.path.join(ROOTDIR,"resources","media","series.png")
+ANIME     = os.path.join(ROOTDIR,"resources","media","anime.png")
+ADULTS    = os.path.join(ROOTDIR,"resources","media","adults.png")
+NEXT      = os.path.join(ROOTDIR,"resources","media","next.png")
+DOWNLOADS = os.path.join(ROOTDIR,"resources","media","downloads.png")
+SETTINGS  = os.path.join(ROOTDIR,"resources","media","settings.png")
 
 URL     = 'http://158.69.201.210/pitvstick/'
 
@@ -38,12 +44,8 @@ def main_menu():
     add_dir('Anime', 'movies', 'anime', ANIME, FANART)
     if xbmcplugin.getSetting(addon_handle, 'password') != '':
         add_dir('Adultos', 'movies', 'adults', ADULTS, FANART)
+    add_dir('Descargas', 'movies', 'downloads', DOWNLOADS, FANART)
     add_dir('Ajustes', 'settings', 'settings', SETTINGS, FANART)
-
-    vid = rapidvideo.get_video_url('https://rapidvideo.com/e/FW6AX3N5L4')
-    add_stream('test video',vid[len(vid)-1][1],'movies', ICON, FANART)
-
-    xbmc.executebuiltin('Notification(PiTVStick, {}, 5000)'.format(vid))
 
 def tv_menu():
     add_dir('Televisión abierta', 'tvshows', 'openTv', TV, FANART)
@@ -127,8 +129,6 @@ def search_movies(anime=False, page=1, adults=False):
     search = get_string('Buscar Películas...')
     get_movies(anime, search, page, adults)
 
-    xbmc.executebuiltin('Notification(PiTVStick, {}, 5000)'.format(adults))
-
 def series_menu(anime=False, search=None, page=1, adults=False):
     anime_str = ''
     serie_str = 'series'
@@ -182,7 +182,12 @@ def get_series_seasons(serie):
     else:
         for line in lines:
             data = line.split(" | ")
-            add_dir('Temporada {}'.format(data[1]), 'episodes', 'seasons', ICON, FANART, {}, data[0])
+            season_id = data[0]
+            season_name = data[1]
+            season_logo = data[2]
+            season_fanart = data[3]
+            season_number = data[4]
+            add_dir('{} - Temporada {}'.format(season_name, season_number), 'episodes', 'seasons', season_logo, season_fanart, {}, season_id)
 
 def get_series_chapters(season):
     chapters_url = 'chapters.php?id={}'.format(season)
@@ -190,46 +195,86 @@ def get_series_chapters(season):
     lines = response.readlines()
     for line in lines:
         data = line.split(" | ")
-        info = {'title':data[0],
-                'plot':data[4],
+
+        name = data[0]
+        link = data[1]
+        logo = data[2]
+        fanart = data[3]
+        plot = data[4]
+        year = data[5]
+        duration = data[6]
+
+        info = {'title':name,
+                'plot':plot,
                 #'genre':data[4],
-                'year':data[5],
-                'duration':data[6],
+                'year':year,
+                'duration':duration,
                 #'mpaa':movie['Rating'],
                 }
 
-        add_stream(data[0],data[1],'episodes',data[2],data[3],info)
+        add_stream(name,link,'play',logo,fanart,info)
+
+def get_downloads():
+    directories = next(os.walk(videos_dir))[1]
+    for directory in directories:
+        info = {'title':directory,
+                'plot':'asd',
+                #'genre':data[4],
+                'year':'2014',
+        #        'duration':duration,
+                #'mpaa':movie['Rating'],
+                }
+        video  = videos_dir + directory + '/video.mp4'
+        icon   = videos_dir + directory + '/icon.png'
+        fanart = videos_dir + directory + '/fanart.jpg'
+        xbmc.executebuiltin('Notification(Control parental, {}, 5000)'.format(video))
+        add_stream(directory, video, 'play', icon, fanart, info)
+
+def download_video(url, name, icon, fanart):
+    folder = videos_dir + name + '/'
+    if not(os.path.isdir(folder)):
+        os.mkdir(folder)
+
+    args = '|'.join((name, folder, url, icon, fanart))
+    args = args.encode('base64')
+    xbmc.executebuiltin(r'xbmc.RunScript({}resources/lib/download.py,'.format(plugin_dir) + args + ')')
+
+def play_video(url):
+    if 'rapidvideo.com' in url:
+        url = rapidvideo.get_video_url(url)
+
+    playitem = xbmcgui.ListItem(path=url)
+    playitem.setPath(url)
+    xbmcplugin.setResolvedUrl(addon_handle, True, playitem)
 
 def add_stream(name, id, stream_type, icon, fanart, info=None):
-    ok = True
-    u=id
-    #u=sys.argv[0]+"?id="+urllib.quote_plus(id)+"&mode="+str(103)+"&type="+urllib.quote_plus(stream_type)
-    liz=xbmcgui.ListItem(name)
+    url = sys.argv[0] + "?&mode=play&media_id=" + id
     if fanart == None: fanart = FANART
-    liz.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart})
-    liz.setProperty("IsPlayable", "true")
-    liz.setInfo(type="Video", infoLabels={"Title": name})
-    liz.setInfo( type="Video", infoLabels=info)
-    ok = xbmcplugin.addDirectoryItem(handle=addon_handle,url=u,listitem=liz,isFolder=False)
+
+    download_url = sys.argv[0] + "?&mode=download&media_id=" + id + "&name=" + name + "&icon=" + icon + "&fanart=" + fanart
+    listitem = xbmcgui.ListItem(name)
+    listitem.addContextMenuItems([('Descargar', 'XBMC.RunPlugin({})'.format(download_url))])
+    listitem.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart})
+    listitem.setProperty("IsPlayable", "true")
+    listitem.setInfo(type="Video", infoLabels=info)
+
+    xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=listitem, isFolder=False)
     xbmcplugin.setContent(addon_handle, stream_type)
-    return ok
 
 
 def add_dir(name, mode, id, icon, fanart=None, info=None, media_id=None, page=1, adults=False):
-    xbmc.log(ROOTDIR)
-    xbmc.log("ICON IMAGE = "+icon)
-    ok = True
-    u = sys.argv[0]+"?id="+urllib.quote_plus(id)+"&mode="+str(mode)
-    if media_id is not None: u += "&media_id=%s" % media_id
-    u += "&page=%s" % page
-    if adults: u += "&adults=%s" % adults
-    liz=xbmcgui.ListItem(name)
-    liz.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart})
-    if info is not None:
-        liz.setInfo( type="Video", infoLabels=info)
-    ok = xbmcplugin.addDirectoryItem(handle=addon_handle,url=u,listitem=liz,isFolder=True)
+    url = sys.argv[0]+"?id="+urllib.quote_plus(id)+"&mode="+str(mode)
+    if media_id is not None: url += "&media_id=%s" % media_id
+
+    url += "&page=%s" % page
+    if adults: url += "&adults=%s" % adults
+
+    listitem=xbmcgui.ListItem(name)
+    listitem.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart})
+    if info is not None: listitem.setInfo(type="Video", infoLabels=info)
+
+    xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=listitem, isFolder=True)
     xbmcplugin.setContent(addon_handle, 'tvshows')
-    return ok
 
 def get_params():
     param=[]
