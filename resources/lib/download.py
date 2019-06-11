@@ -2,7 +2,6 @@
 import xbmcgui, xbmc
 import urllib
 import sys
-from urllib2 import HTTPError
 
 arg = sys.argv[1]
 title, folder, video_url, icon_url, fanart_url = arg.decode('base64').split('|')
@@ -21,6 +20,6 @@ try:
 	urllib.urlretrieve(fanart_url.decode('utf-8'), folder.decode('utf-8') + 'fanart.jpg', reporthook)
 	progress_bar.close()
 	xbmc.executebuiltin('Notification(PiTVStick, La descarga de {} ha terminado, 5000)'.format(title))
-except HTTPError as error:
+except:
 	progress_bar.close()
 	xbmc.executebuiltin('Notification(PiTVStick, Falló la descarga de {}, 5000)'.format(title))

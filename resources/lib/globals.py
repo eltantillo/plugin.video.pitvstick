@@ -6,17 +6,25 @@ from datetime import datetime
 import rapidvideo
 import threading
 
+addon_handle = int(sys.argv[1])
+
 plugin_dir = xbmc.translatePath("special://home/addons/plugin.video.pitvstick/")
-videos_dir = os.path.expanduser("~") + '/videos/'
 keymap_xml   = xbmc.translatePath("special://profile/keymaps/pitvstick.xml")
+videos_dir = os.path.expanduser("~") + '/videos/'
+if not(os.path.isdir(videos_dir)):
+    os.mkdir(videos_dir)
+#videos_dir = xbmcplugin.getSetting(addon_handle, 'download_folder')
+#if videos_dir == '~/videos':
+#    videos_dir = os.path.expanduser("~") + '/videos/'
+#    if not(os.path.isdir(videos_dir)):
+#        os.mkdir(videos_dir)
+#videos_dir = xbmcplugin.getSetting(addon_handle, 'download_folder')
+#videos_dir = os.path.expanduser("~") + '/videos/'
+    
 if not(os.path.isfile(keymap_xml)):
     f = open(keymap_xml, "w")
     f.write('<?xml version="1.0" encoding="UTF-8"?><keymap><FullscreenVideo><keyboard><backspace>Stop</backspace><backspace mod="longpress">FullScreen</backspace><escape>Stop</escape><escape mod="longpress">FullScreen</escape></keyboard></FullscreenVideo></keymap>')
     f.close()
-if not(os.path.isdir(videos_dir)):
-    os.mkdir(videos_dir)
-
-addon_handle = int(sys.argv[1])
 
 ADDON   = xbmcaddon.Addon()
 ROOTDIR = ADDON.getAddonInfo('path')
@@ -218,17 +226,26 @@ def get_downloads():
     directories = next(os.walk(videos_dir))[1]
     for directory in directories:
         info = {'title':directory,
-                'plot':'asd',
+                #'plot':'asd',
                 #'genre':data[4],
-                'year':'2014',
-        #        'duration':duration,
+                #'year':'2014',
+                #'duration':duration,
                 #'mpaa':movie['Rating'],
                 }
         video  = videos_dir + directory + '/video.mp4'
         icon   = videos_dir + directory + '/icon.png'
         fanart = videos_dir + directory + '/fanart.jpg'
-        xbmc.executebuiltin('Notification(Control parental, {}, 5000)'.format(video))
-        add_stream(directory, video, 'play', icon, fanart, info)
+        add_stream(directory, video, 'play', icon, fanart, info, True)
+
+def delete_download(name):
+    folder = videos_dir + name + '/'
+    for root, dirs, files in os.walk(folder, topdown=False):
+        for name in files:
+            os.remove(os.path.join(root, name))
+        for name in dirs:
+            os.rmdir(os.path.join(root, name))
+    os.rmdir(folder)
+    xbmc.executebuiltin('Notification(PiTVStick, Se ha eliminado {}, 5000)'.format(name))
 
 def download_video(url, name, icon, fanart):
     folder = videos_dir + name + '/'
@@ -247,16 +264,22 @@ def play_video(url):
     playitem.setPath(url)
     xbmcplugin.setResolvedUrl(addon_handle, True, playitem)
 
-def add_stream(name, id, stream_type, icon, fanart, info=None):
+def add_stream(name, id, stream_type, icon, fanart, info=None, downloads=False):
     url = sys.argv[0] + "?&mode=play&media_id=" + id
     if fanart == None: fanart = FANART
 
-    download_url = sys.argv[0] + "?&mode=download&media_id=" + id + "&name=" + name + "&icon=" + icon + "&fanart=" + fanart
+    
     listitem = xbmcgui.ListItem(name)
-    listitem.addContextMenuItems([('Descargar', 'XBMC.RunPlugin({})'.format(download_url))])
     listitem.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart})
     listitem.setProperty("IsPlayable", "true")
     listitem.setInfo(type="Video", infoLabels=info)
+    
+    if downloads:
+        delete_url = sys.argv[0] + "?&mode=delete&name=" + name + "&handle=" + str(addon_handle)
+        listitem.addContextMenuItems([('Eliminar', 'RunPlugin({})'.format(delete_url))])
+    else:
+        download_url = sys.argv[0] + "?&mode=download&media_id=" + id + "&name=" + name + "&icon=" + icon + "&fanart=" + fanart + "&handle=" + str(addon_handle)
+        listitem.addContextMenuItems([('Descargar', 'RunPlugin({})'.format(download_url))])
 
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=listitem, isFolder=False)
     xbmcplugin.setContent(addon_handle, stream_type)
@@ -350,7 +373,7 @@ def get_pass():
     if pass_input == xbmcplugin.getSetting(addon_handle, 'password'):
         success = True
     else:
-        xbmc.executebuiltin('Notification(Control parental, La clave es incorrecta, 5000)')
+        xbmc.executebuiltin('Notification(Control parental, La clave es incorrecta., 5000)')
 
     return(success)
 
@@ -369,6 +392,7 @@ def get_string(heading, password=False):
 
 def open_settings():
     if get_pass():
+        #ADDON.ActivateWindow(Settings)
         ADDON.openSettings()
 
 def check_subscription():
@@ -377,7 +401,7 @@ def check_subscription():
 
     # Teléfono no registrado en el addon
     if phone == '':
-        xbmc.executebuiltin('Notification(PiTVStick, Registre su número de teléfono, 5000)')
+        xbmc.executebuiltin('Notification(PiTVStick, Registre su número de teléfono., 5000)')
         open_settings()
     else:
         expiration = urllib.urlopen('http://158.69.201.210/pitvstick/subscription.php?phone={}'.format(phone)).readlines()
@@ -407,7 +431,15 @@ No olvide mandar un Whatsapp con su número de teléfono {} y una foto de su rec
                 valid = True
 
         else:
-            xbmc.executebuiltin('Notification(PiTVStick, No se encontró el número telefónico, 5000)')
+            xbmc.executebuiltin('Notification(PiTVStick, No se encontró el número telefónico., 5000)')
             open_settings()
 
     return valid
+
+def internet_access():
+    try:
+        urllib.urlopen(URL)
+        return True
+    except: 
+        xbmc.executebuiltin('Notification(PiTVStick, No se pudo conectar a internet. Revise su conexión., 5000)')
+        return False
