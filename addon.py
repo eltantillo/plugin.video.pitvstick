@@ -21,8 +21,6 @@ if internet_access():
         page = params["page"]
     if 'adults' in params:
         adults = params["adults"]
-    if 'handle' in params:
-        sys.argv[1] = params["handle"]
 
     if mode is None:
         main_menu()

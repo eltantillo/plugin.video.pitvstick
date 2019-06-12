@@ -275,10 +275,10 @@ def add_stream(name, id, stream_type, icon, fanart, info=None, downloads=False):
     listitem.setInfo(type="Video", infoLabels=info)
     
     if downloads:
-        delete_url = sys.argv[0] + "?&mode=delete&name=" + name + "&handle=" + str(addon_handle)
+        delete_url = sys.argv[0] + "?&mode=delete&name=" + name
         listitem.addContextMenuItems([('Eliminar', 'RunPlugin({})'.format(delete_url))])
     else:
-        download_url = sys.argv[0] + "?&mode=download&media_id=" + id + "&name=" + name + "&icon=" + icon + "&fanart=" + fanart + "&handle=" + str(addon_handle)
+        download_url = sys.argv[0] + "?&mode=download&media_id=" + id + "&name=" + name + "&icon=" + icon + "&fanart=" + fanart
         listitem.addContextMenuItems([('Descargar', 'RunPlugin({})'.format(download_url))])
 
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=listitem, isFolder=False)
