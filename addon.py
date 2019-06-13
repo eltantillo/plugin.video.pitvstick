@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from resources.lib.media import *
 from resources.lib.functions import *
-import xbmc
 
 if internet_access():
     params = get_params()
@@ -24,8 +23,6 @@ if internet_access():
     if 'adults' in params:
         adults = params["adults"]
 
-    xbmc.executebuiltin('Notification(PiTVStick, {}, 5000)'.format(mode))
-
     if mode is None:
         main_menu()
 
@@ -36,7 +33,6 @@ if internet_access():
         play_video(media_id)
 
     elif mode == 'download':
-        # xbmc.executebuiltin('Notification(PiTVStick, {}, 5000)'.format('year' in params))
         download_video(
             media_id,
             name,
