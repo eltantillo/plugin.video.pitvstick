@@ -3,8 +3,8 @@
     <category label="General">
         <setting label="Cuenta" type="lsep"/>
         <setting label="Número de teléfono" type="text" id="phone" default=""/>
-        <!--setting label="Sistema" type="lsep"/>
-        <setting label="Directorio de descarga" type="folder" id="download_folder" default="~/videos"/-->
+        <setting label="Sistema" type="lsep"/>
+        <setting label="Directorio de descarga" type="folder" id="download_folder" default="~/videos"/>
     </category>
     <category label="Control Parental">
         <setting label="Clave control parental" type="text" id="password" option="hidden" default=""/>

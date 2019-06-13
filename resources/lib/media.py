@@ -1,30 +1,10 @@
 # -*- coding: utf-8 -*-
-import sys, os
-import urllib, time
+import os
+import urllib
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
-from datetime import datetime
 import rapidvideo
-import threading
 
-addon_handle = int(sys.argv[1])
-
-plugin_dir = xbmc.translatePath("special://home/addons/plugin.video.pitvstick/")
-keymap_xml   = xbmc.translatePath("special://profile/keymaps/pitvstick.xml")
-videos_dir = os.path.expanduser("~") + '/videos/'
-if not(os.path.isdir(videos_dir)):
-    os.mkdir(videos_dir)
-#videos_dir = xbmcplugin.getSetting(addon_handle, 'download_folder')
-#if videos_dir == '~/videos':
-#    videos_dir = os.path.expanduser("~") + '/videos/'
-#    if not(os.path.isdir(videos_dir)):
-#        os.mkdir(videos_dir)
-#videos_dir = xbmcplugin.getSetting(addon_handle, 'download_folder')
-#videos_dir = os.path.expanduser("~") + '/videos/'
-    
-if not(os.path.isfile(keymap_xml)):
-    f = open(keymap_xml, "w")
-    f.write('<?xml version="1.0" encoding="UTF-8"?><keymap><FullscreenVideo><keyboard><backspace>Stop</backspace><backspace mod="longpress">FullScreen</backspace><escape>Stop</escape><escape mod="longpress">FullScreen</escape></keyboard></FullscreenVideo></keymap>')
-    f.close()
+from functions import *
 
 ADDON   = xbmcaddon.Addon()
 ROOTDIR = ADDON.getAddonInfo('path')
@@ -43,17 +23,16 @@ NEXT      = os.path.join(ROOTDIR,"resources","media","next.png")
 DOWNLOADS = os.path.join(ROOTDIR,"resources","media","downloads.png")
 SETTINGS  = os.path.join(ROOTDIR,"resources","media","settings.png")
 
-URL     = 'http://158.69.201.210/pitvstick/'
-
 def main_menu():
     #add_dir('Televisión', 'tvshows', 'tv', TV, FANART)
     add_dir('Películas', 'movies', 'movies', MOVIES, FANART)
-    add_dir('Series', 'tvshows', 'series', SERIES, FANART)
+    add_dir('Series', 'movies', 'series', SERIES, FANART)
     add_dir('Anime', 'movies', 'anime', ANIME, FANART)
-    if xbmcplugin.getSetting(addon_handle, 'password') != '':
+    if parental_pass != '':
         add_dir('Adultos', 'movies', 'adults', ADULTS, FANART)
     add_dir('Descargas', 'movies', 'downloads', DOWNLOADS, FANART)
-    add_dir('Ajustes', 'settings', 'settings', SETTINGS, FANART)
+    
+    add_action('Ajustes', 'settings', SETTINGS, FANART)
 
 def tv_menu():
     add_dir('Televisión abierta', 'tvshows', 'openTv', TV, FANART)
@@ -61,18 +40,18 @@ def tv_menu():
 
 def anime_menu():
     add_dir('Películas de Anime', 'movies', 'animeMovies', MOVIES, FANART)
-    add_dir('Series de Anime', 'tvshows', 'animeSeries', SERIES, FANART)
+    add_dir('Series de Anime', 'movies', 'animeSeries', SERIES, FANART)
 
 def adults_menu():
     if get_pass():
         #add_dir('Televisión Adultos', 'tvshows', 'tvAdults', PAIDTV, FANART)
         add_dir('Películas Adultos', 'movies', 'moviesAdults', MOVIES, FANART)
-        add_dir('Series Adultos', 'tvshows', 'seriesAdults', SERIES, FANART)
+        add_dir('Series Adultos', 'movies', 'seriesAdults', SERIES, FANART)
         add_dir('Anime Adultos', 'movies', 'animeAdults', ANIME, FANART)
 
 def adults_anime_menu():
     add_dir('Películas de Anime Adultos', 'movies', 'animeMoviesAdults', MOVIES, FANART)
-    add_dir('Series de Anime Adultos', 'tvshows', 'animeSeriesAdults', SERIES, FANART)
+    add_dir('Series de Anime Adultos', 'movies', 'animeSeriesAdults', SERIES, FANART)
 
 def get_tv_channels(cable=False, adults=False):
     tv_url = 'tv.php?'
@@ -145,7 +124,7 @@ def series_menu(anime=False, search=None, page=1, adults=False):
         serie_str = 'animeSeries'
     if adults:
         serie_str += 'Adults'
-    add_dir('Buscar series...', 'tvshows', 'search{}Series'.format(anime_str), SEARCH, FANART, adults=adults)
+    add_dir('Buscar series...', 'movies', 'search{}Series'.format(anime_str), SEARCH, FANART, adults=adults)
 
     series_url = 'series.php?page={}'.format(page)
     if anime:
@@ -173,7 +152,7 @@ def series_menu(anime=False, search=None, page=1, adults=False):
         add_dir(data[1], 'tvshows', 'seasons', data[3], data[4], info, data[0])
 
     if len(lines) == 25:
-        add_dir('Cargar más...', 'tvshows', serie_str, NEXT, page=int(page)+1)
+        add_dir('Cargar más...', 'movies', serie_str, NEXT, page=int(page)+1)
 
 def search_series(anime=False, page=1, adults=False):
     search = get_string('Buscar Series...')
@@ -195,7 +174,7 @@ def get_series_seasons(serie):
             season_logo = data[2]
             season_fanart = data[3]
             season_number = data[4]
-            add_dir('{} - Temporada {}'.format(season_name, season_number), 'episodes', 'seasons', season_logo, season_fanart, {}, season_id)
+            add_dir('{} - Temporada {}'.format(season_name, season_number), 'tvshows', 'episodes', season_logo, season_fanart, {}, season_id)
 
 def get_series_chapters(season):
     chapters_url = 'chapters.php?id={}'.format(season)
@@ -220,22 +199,26 @@ def get_series_chapters(season):
                 #'mpaa':movie['Rating'],
                 }
 
-        add_stream(name,link,'play',logo,fanart,info)
+        add_stream(name,link,'episodes',logo,fanart,info)
 
 def get_downloads():
     directories = next(os.walk(videos_dir))[1]
     for directory in directories:
-        info = {'title':directory,
-                #'plot':'asd',
-                #'genre':data[4],
-                #'year':'2014',
-                #'duration':duration,
-                #'mpaa':movie['Rating'],
-                }
-        video  = videos_dir + directory + '/video.mp4'
-        icon   = videos_dir + directory + '/icon.png'
-        fanart = videos_dir + directory + '/fanart.jpg'
-        add_stream(directory, video, 'play', icon, fanart, info, True)
+        name = directory
+        directory = videos_dir + directory + '/'
+        if os.path.exists(directory + 'movie_data.txt'):
+            video  = directory + 'video.mp4'
+            icon   = directory + 'icon.png'
+            fanart = directory + 'fanart.jpg'
+
+            f = open(directory + "movie_data.txt", "r")
+            year = f.readline()
+            f.close()
+
+            info = {'title':name,
+                    'year':year,
+                    }
+            add_stream(name, video, 'movies', icon, fanart, info, True)
 
 def delete_download(name):
     folder = videos_dir + name + '/'
@@ -247,10 +230,14 @@ def delete_download(name):
     os.rmdir(folder)
     xbmc.executebuiltin('Notification(PiTVStick, Se ha eliminado {}, 5000)'.format(name))
 
-def download_video(url, name, icon, fanart):
+def download_video(url, name, icon, fanart, year):
+    name = sanitize_string(name)
     folder = videos_dir + name + '/'
     if not(os.path.isdir(folder)):
         os.mkdir(folder)
+        f = open(folder + "movie_data.txt", "w")
+        f.write(year)
+        f.close()
 
     args = '|'.join((name, folder, url, icon, fanart))
     args = args.encode('base64')
@@ -264,21 +251,27 @@ def play_video(url):
     playitem.setPath(url)
     xbmcplugin.setResolvedUrl(addon_handle, True, playitem)
 
+def add_action(name, mode, icon, fanart=None):
+    url = addon_path+"?mode="+str(mode)
+
+    listitem=xbmcgui.ListItem(name)
+    listitem.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart})
+    xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=listitem, isFolder=False)
+
 def add_stream(name, id, stream_type, icon, fanart, info=None, downloads=False):
-    url = sys.argv[0] + "?&mode=play&media_id=" + id
+    url = addon_path + "?&mode=play&media_id=" + id
     if fanart == None: fanart = FANART
 
-    
     listitem = xbmcgui.ListItem(name)
     listitem.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart})
     listitem.setProperty("IsPlayable", "true")
     listitem.setInfo(type="Video", infoLabels=info)
-    
+
     if downloads:
-        delete_url = sys.argv[0] + "?&mode=delete&name=" + name
+        delete_url = addon_path + "?&mode=delete&name=" + name
         listitem.addContextMenuItems([('Eliminar', 'RunPlugin({})'.format(delete_url))])
     else:
-        download_url = sys.argv[0] + "?&mode=download&media_id=" + id + "&name=" + name + "&icon=" + icon + "&fanart=" + fanart
+        download_url = addon_path + "?&mode=download&media_id=" + id + "&name=" + name + "&icon=" + icon + "&fanart=" + fanart + "&year=" + info['year']
         listitem.addContextMenuItems([('Descargar', 'RunPlugin({})'.format(download_url))])
 
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=listitem, isFolder=False)
@@ -286,7 +279,7 @@ def add_stream(name, id, stream_type, icon, fanart, info=None, downloads=False):
 
 
 def add_dir(name, mode, id, icon, fanart=None, info=None, media_id=None, page=1, adults=False):
-    url = sys.argv[0]+"?id="+urllib.quote_plus(id)+"&mode="+str(mode)
+    url = addon_path+"?id="+urllib.quote_plus(id)+"&mode="+str(mode)
     if media_id is not None: url += "&media_id=%s" % media_id
 
     url += "&page=%s" % page
@@ -297,25 +290,7 @@ def add_dir(name, mode, id, icon, fanart=None, info=None, media_id=None, page=1,
     if info is not None: listitem.setInfo(type="Video", infoLabels=info)
 
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=listitem, isFolder=True)
-    xbmcplugin.setContent(addon_handle, 'tvshows')
-
-def get_params():
-    param=[]
-    paramstring=sys.argv[2]
-    if len(paramstring)>=2:
-            params=sys.argv[2]
-            cleanedparams=params.replace('?','')
-            if (params[len(params)-1]=='/'):
-                    params=params[0:len(params)-2]
-            pairsofparams=cleanedparams.split('&')
-            param={}
-            for i in range(len(pairsofparams)):
-                    splitparams={}
-                    splitparams=pairsofparams[i].split('=')
-                    if (len(splitparams))==2:
-                            param[splitparams[0]]=splitparams[1]
-
-    return param
+    xbmcplugin.setContent(addon_handle, mode)
 
 def get_classifications():
     classsifications = ()
@@ -362,84 +337,3 @@ def get_genres():
         genres += ('Yaoi',)
 
     return ",".join(genres)
-
-
-def get_pass():
-    if xbmcplugin.getSetting(addon_handle, 'password') == '':
-        return(True)
-
-    success = False
-    pass_input = get_string('Clave control parental', True)
-    if pass_input == xbmcplugin.getSetting(addon_handle, 'password'):
-        success = True
-    else:
-        xbmc.executebuiltin('Notification(Control parental, La clave es incorrecta., 5000)')
-
-    return(success)
-
-def get_string(heading, password=False):
-    input = ''
-    kb = xbmc.Keyboard('default', 'heading', True)
-    kb.setDefault('')
-    kb.setHeading(heading)
-    kb.setHiddenInput(password)
-    kb.doModal()
-
-    if (kb.isConfirmed()):
-        input = kb.getText()
-
-    return input
-
-def open_settings():
-    if get_pass():
-        #ADDON.ActivateWindow(Settings)
-        ADDON.openSettings()
-
-def check_subscription():
-    valid = False
-    phone = xbmcplugin.getSetting(addon_handle, 'phone')
-
-    # Teléfono no registrado en el addon
-    if phone == '':
-        xbmc.executebuiltin('Notification(PiTVStick, Registre su número de teléfono., 5000)')
-        open_settings()
-    else:
-        expiration = urllib.urlopen('http://158.69.201.210/pitvstick/subscription.php?phone={}'.format(phone)).readlines()
-
-        # Teléfono en la base de datos
-        if len(expiration) > 0:
-            expiration = expiration[0]
-            timestamp  = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-            timestamp  = time.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
-            expiration = time.strptime(expiration, '%Y-%m-%d %H:%M:%S')
-
-            # Cuenta expirada
-            if timestamp > expiration:
-                pass
-                xbmc.executebuiltin('Notification(PiTVStick, Su cuenta ha expirado, 5000)')
-
-                info = {'plot': '''Su cuenta se encuentra suspendida debido a que no tenemos registro de su último pago.
-
-Por favor haga un depósito de $100(MXN) al número de tarjeta 1234-5678-9123-4567 en su OXXO más cercano (se le cobrará una comisión de $10 MXN).
-
-No olvide mandar un Whatsapp con su número de teléfono {} y una foto de su recibo al número (656)-412-6134'''.format(phone)
-#dar su número de teléfono {} como número de referencia o
-                        }
-
-                add_stream('Su cuenta ha expirado','movies','movies',ICON,FANART,info)
-            else:
-                valid = True
-
-        else:
-            xbmc.executebuiltin('Notification(PiTVStick, No se encontró el número telefónico., 5000)')
-            open_settings()
-
-    return valid
-
-def internet_access():
-    try:
-        urllib.urlopen(URL)
-        return True
-    except: 
-        xbmc.executebuiltin('Notification(PiTVStick, No se pudo conectar a internet. Revise su conexión., 5000)')
-        return False

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-from resources.lib.globals import *
+from resources.lib.media import *
+from resources.lib.functions import *
+import xbmc
 
 if internet_access():
     params = get_params()
@@ -22,6 +24,8 @@ if internet_access():
     if 'adults' in params:
         adults = params["adults"]
 
+    xbmc.executebuiltin('Notification(PiTVStick, {}, 5000)'.format(mode))
+
     if mode is None:
         main_menu()
 
@@ -32,7 +36,14 @@ if internet_access():
         play_video(media_id)
 
     elif mode == 'download':
-        download_video(media_id, name, params["icon"], params["fanart"])
+        # xbmc.executebuiltin('Notification(PiTVStick, {}, 5000)'.format('year' in params))
+        download_video(
+            media_id,
+            name,
+            params["icon"],
+            params["fanart"],
+            params["year"]
+        )
 
     elif mode == 'delete':
         delete_download(name)
@@ -40,38 +51,37 @@ if internet_access():
     elif mode == 'tvshows':
         if id == 'tv':
             tv_menu()
-        elif id == 'series':
-            series_menu(page=page)
-        elif id == 'searchSeries':
-            search_series(page=page, adults=adults)
         elif id == 'openTv':
             get_tv_channels()
         elif id == 'cableTv':
             get_tv_channels(True)
-        elif id == 'animeSeries':
-            series_menu(anime=True, page=page)
-        elif id == 'searchAnimeSeries':
-            search_series(anime=True, page=page, adults=adults)
         elif id == 'seasons':
             get_series_seasons(media_id)
         elif id == 'tvAdults':
             get_tv_channels(True, True)
-        elif id == 'seriesAdults':
-            series_menu(page=page, adults=True)
-        elif id == 'animeSeriesAdults':
-            series_menu(anime=True, page=page, adults=True)
+        elif id == 'episodes':
+            get_series_chapters(media_id)
 
     elif mode == 'movies':
         if id == 'movies':
             get_movies(page=page)
         elif id == 'searchMovies':
             search_movies(page=page, adults=adults)
+        elif id == 'series':
+            series_menu(page=page)
+        elif id == 'searchSeries':
+            search_series(page=page, adults=adults)
         elif id == 'anime':
             anime_menu()
         elif id == 'searchAnimeMovies':
             search_movies(anime=True, page=page, adults=adults)
         elif id == 'animeMovies':
             get_movies(anime=True, page=page)
+        elif id == 'animeSeries':
+            series_menu(anime=True, page=page)
+        elif id == 'searchAnimeSeries':
+            search_series(anime=True, page=page, adults=adults)
+
         # Adults section
         elif id == 'adults':
             adults_menu()
@@ -81,10 +91,12 @@ if internet_access():
             get_movies(page=page, adults=True)
         elif id == 'animeMoviesAdults':
             get_movies(anime=True, page=page, adults=True)
+        elif id == 'seriesAdults':
+            series_menu(page=page, adults=True)
+        elif id == 'animeSeriesAdults':
+            series_menu(anime=True, page=page, adults=True)
+
         elif id == 'downloads':
             get_downloads()
-
-    elif mode == 'episodes':
-        get_series_chapters(media_id)
 
     xbmcplugin.endOfDirectory(addon_handle)
