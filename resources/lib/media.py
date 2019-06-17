@@ -1,24 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
 import urllib
-import xbmc, xbmcplugin, xbmcgui
-import rapidvideo, mailru
+import xbmcplugin
 
 from functions import *
-
-FANART = os.path.join(ROOTDIR,"resources","media","fanart.jpg")
-
-ICON      = os.path.join(ROOTDIR,"resources","media","icon.png")
-SEARCH    = os.path.join(ROOTDIR,"resources","media","search.png")
-MOVIES    = os.path.join(ROOTDIR,"resources","media","movies.png")
-TV        = os.path.join(ROOTDIR,"resources","media","tv.png")
-PAIDTV    = os.path.join(ROOTDIR,"resources","media","paidtv.png")
-SERIES    = os.path.join(ROOTDIR,"resources","media","series.png")
-ANIME     = os.path.join(ROOTDIR,"resources","media","anime.png")
-ADULTS    = os.path.join(ROOTDIR,"resources","media","adults.png")
-NEXT      = os.path.join(ROOTDIR,"resources","media","next.png")
-DOWNLOADS = os.path.join(ROOTDIR,"resources","media","downloads.png")
-SETTINGS  = os.path.join(ROOTDIR,"resources","media","settings.png")
 
 def main_menu():
     #add_dir('Televisión', 'tvshows', 'tv', TV, FANART)
@@ -218,80 +203,6 @@ def get_downloads():
                     'year':year,
                     }
             add_stream(name, video, 'movies', icon, fanart, info, True)
-
-def delete_download(name):
-    folder = videos_dir + name + '/'
-    for root, dirs, files in os.walk(folder, topdown=False):
-        for name in files:
-            os.remove(os.path.join(root, name))
-        for name in dirs:
-            os.rmdir(os.path.join(root, name))
-    os.rmdir(folder)
-    xbmc.executebuiltin('Notification(PiTVStick, Se ha eliminado {}, 5000)'.format(name))
-
-def download_video(url, name, icon, fanart, year):
-    name = sanitize_string(name)
-    folder = videos_dir + name + '/'
-    if not(os.path.isdir(folder)):
-        os.mkdir(folder)
-        f = open(folder + "movie_data.txt", "w")
-        f.write(year)
-        f.close()
-
-    args = '|'.join((name, folder, url, icon, fanart))
-    args = args.encode('base64')
-    xbmc.executebuiltin(r'xbmc.RunScript({}resources/lib/download.py,'.format(plugin_dir) + args + ')')
-
-def play_video(url):
-    if 'rapidvideo.com' in url:
-        url = rapidvideo.get_video_url(url)
-    elif 'mail.ru' in url:
-        url = mailru.get_video_url(url)
-
-    playitem = xbmcgui.ListItem(path=url)
-    playitem.setPath(url)
-    xbmcplugin.setResolvedUrl(addon_handle, True, playitem)
-
-def add_action(name, mode, icon, fanart=None):
-    url = addon_path+"?mode="+str(mode)
-
-    listitem=xbmcgui.ListItem(name)
-    listitem.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart})
-    xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=listitem, isFolder=False)
-
-def add_stream(name, id, stream_type, icon, fanart, info=None, downloads=False):
-    url = addon_path + "?&mode=play&media_id=" + id
-    if fanart == None: fanart = FANART
-
-    listitem = xbmcgui.ListItem(name)
-    listitem.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart, 'banner': fanart})
-    listitem.setProperty("IsPlayable", "true")
-    listitem.setInfo(type="Video", infoLabels=info)
-
-    if downloads:
-        delete_url = addon_path + "?&mode=delete&name=" + name
-        listitem.addContextMenuItems([('Eliminar', 'RunPlugin({})'.format(delete_url))])
-    else:
-        download_url = addon_path + "?&mode=download&media_id=" + id + "&name=" + name + "&icon=" + icon + "&fanart=" + fanart + "&year=" + info['year']
-        listitem.addContextMenuItems([('Descargar', 'RunPlugin({})'.format(download_url))])
-
-    xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=listitem, isFolder=False)
-    xbmcplugin.setContent(addon_handle, stream_type)
-
-
-def add_dir(name, mode, id, icon, fanart=None, info=None, media_id=None, page=1, adults=False):
-    url = addon_path+"?id="+urllib.quote_plus(id)+"&mode="+str(mode)
-    if media_id is not None: url += "&media_id=%s" % media_id
-
-    url += "&page=%s" % page
-    if adults: url += "&adults=%s" % adults
-
-    listitem=xbmcgui.ListItem(name)
-    listitem.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart, 'banner': fanart})
-    if info is not None: listitem.setInfo(type="Video", infoLabels=info)
-
-    xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=listitem, isFolder=True)
-    xbmcplugin.setContent(addon_handle, mode)
 
 def get_classifications():
     classsifications = ()

@@ -2,7 +2,7 @@
 from resources.lib.media import *
 from resources.lib.functions import *
 
-if internet_access():
+if internet_access() and check_subscription():
     params = get_params()
     id = None
     mode = None
@@ -95,4 +95,4 @@ if internet_access():
         elif id == 'downloads':
             get_downloads()
 
-    xbmcplugin.endOfDirectory(addon_handle)
+xbmcplugin.endOfDirectory(addon_handle)
