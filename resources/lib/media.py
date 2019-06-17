@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 import os
 import urllib
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon
-import rapidvideo
+import xbmc, xbmcplugin, xbmcgui
+import rapidvideo, mailru
 
 from functions import *
-
-ADDON   = xbmcaddon.Addon()
-ROOTDIR = ADDON.getAddonInfo('path')
 
 FANART = os.path.join(ROOTDIR,"resources","media","fanart.jpg")
 
@@ -154,6 +151,8 @@ def series_menu(anime=False, search=None, page=1, adults=False):
     if len(lines) == 25:
         add_dir('Cargar más...', 'movies', serie_str, NEXT, page=int(page)+1)
 
+    xbmcplugin.setContent(addon_handle, 'movies')
+
 def search_series(anime=False, page=1, adults=False):
     search = get_string('Buscar Series...')
     series_menu(anime, search, page, adults)
@@ -246,6 +245,8 @@ def download_video(url, name, icon, fanart, year):
 def play_video(url):
     if 'rapidvideo.com' in url:
         url = rapidvideo.get_video_url(url)
+    elif 'mail.ru' in url:
+        url = mailru.get_video_url(url)
 
     playitem = xbmcgui.ListItem(path=url)
     playitem.setPath(url)
@@ -263,7 +264,7 @@ def add_stream(name, id, stream_type, icon, fanart, info=None, downloads=False):
     if fanart == None: fanart = FANART
 
     listitem = xbmcgui.ListItem(name)
-    listitem.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart})
+    listitem.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart, 'banner': fanart})
     listitem.setProperty("IsPlayable", "true")
     listitem.setInfo(type="Video", infoLabels=info)
 
@@ -286,7 +287,7 @@ def add_dir(name, mode, id, icon, fanart=None, info=None, media_id=None, page=1,
     if adults: url += "&adults=%s" % adults
 
     listitem=xbmcgui.ListItem(name)
-    listitem.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart})
+    listitem.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart, 'banner': fanart})
     if info is not None: listitem.setInfo(type="Video", infoLabels=info)
 
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=listitem, isFolder=True)

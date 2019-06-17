@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import requests, re, sys
+import requests, re
+
 
 def find_multiple_matches(text, pattern):
     return re.findall(pattern, text, re.DOTALL)

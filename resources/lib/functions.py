@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import sys, os
 import urllib
-import xbmc, xbmcplugin
+import xbmc, xbmcplugin, xbmcaddon
 
-URL = 'http://158.69.201.210/pitvstick/'
+ADDON   = xbmcaddon.Addon()
+ROOTDIR = ADDON.getAddonInfo('path')
+URL     = 'http://158.69.201.210/pitvstick/'
 
 addon_path = sys.argv[0]
 addon_handle = int(sys.argv[1])
