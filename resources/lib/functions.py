@@ -4,7 +4,7 @@ import urllib
 import xbmc, xbmcplugin, xbmcaddon, xbmcgui
 import time, _strptime
 import datetime
-import rapidvideo, mailru
+import rapidvideo, mailru, streamango
 
 ADDON   = xbmcaddon.Addon()
 ROOTDIR = ADDON.getAddonInfo('path')
@@ -82,6 +82,10 @@ def play_video(url):
         url = rapidvideo.get_video_url(url)
     elif 'mail.ru' in url:
         url = mailru.get_video_url(url)
+    elif 'pelisplus.net' in url:
+        url = pelisplus.get_video_url(url)
+    elif 'streamango.com' in url:
+        url = streamango.get_video_url(url)
 
     playitem = xbmcgui.ListItem(path=url)
     playitem.setPath(url)
@@ -163,45 +167,48 @@ def open_settings():
 
 def check_subscription():
     valid = False
-    phone = xbmcplugin.getSetting(addon_handle, 'phone')
+    if internet_access():
+        phone = xbmcplugin.getSetting(addon_handle, 'phone')
 
-    # Teléfono no registrado en el addon
-    if phone == '':
-        xbmc.executebuiltin('Notification(PiTVStick, Registre su número de teléfono., 5000)')
-        open_settings()
-    else:
-        expiration = urllib.urlopen('http://158.69.201.210/pitvstick/subscription.php?phone={}'.format(phone)).readlines()
-
-        # Teléfono en la base de datos
-        if len(expiration) > 0:
-            expiration = expiration[0]
-            timestamp  = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            timestamp  = datetime.datetime(*(time.strptime(timestamp, "%Y-%m-%d %H:%M:%S")[:6]))
-            expiration = datetime.datetime(*(time.strptime(expiration, "%Y-%m-%d %H:%M:%S")[:6]))
-
-            if timestamp > expiration - datetime.timedelta( days = 5 ):
-                xbmc.executebuiltin('Notification(PiTVStick, Su cuenta expira en {}, 5000)'.format(str(expiration - timestamp)))
-
-            # Cuenta expirada
-            if timestamp > expiration:
-                pass
-                xbmc.executebuiltin('Notification(PiTVStick, Su cuenta ha expirado, 5000)')
-
-                info = {'plot': '''Su cuenta se encuentra suspendida debido a que no tenemos registro de su último pago.
-
-Por favor haga un depósito de $100(MXN) al número de tarjeta 1234-5678-9123-4567 en su OXXO más cercano (se le cobrará una comisión de $10 MXN).
-
-No olvide mandar un Whatsapp con su número de teléfono {} y una foto de su recibo al número (656)-412-6134'''.format(phone)
-#dar su número de teléfono {} como número de referencia o
-                        }
-
-                add_action('Su cuenta ha expirado', 'movies', ICON, FANART, info)
-            else:
-                valid = True
-
-        else:
-            xbmc.executebuiltin('Notification(PiTVStick, No se encontró el número telefónico., 5000)')
+        # Teléfono no registrado en el addon
+        if phone == '':
+            xbmc.executebuiltin('Notification(PiTVStick, Registre su número de teléfono., 5000)')
             open_settings()
+        else:
+            expiration = urllib.urlopen('http://158.69.201.210/pitvstick/subscription.php?phone={}'.format(phone)).readlines()
+
+            # Teléfono en la base de datos
+            if len(expiration) > 0:
+                expiration = expiration[0]
+                timestamp  = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                timestamp  = datetime.datetime(*(time.strptime(timestamp, "%Y-%m-%d %H:%M:%S")[:6]))
+                expiration = datetime.datetime(*(time.strptime(expiration, "%Y-%m-%d %H:%M:%S")[:6]))
+
+                # Cuenta expirada
+                if timestamp > expiration:
+                    pass
+                    xbmc.executebuiltin('Notification(PiTVStick, Su cuenta ha expirado, 5000)')
+
+                    info = {'plot': '''Su cuenta se encuentra suspendida debido a que no tenemos registro de su último pago. Por favor realice un pago de [B]$100(MXN)[/B] utilizando cualquiera de las siguientes opciones:
+
+- Transferencia desde su banca en linea con CLABE Interbancaria [B]127 18001 64800 79464[/B].
+
+- Depósito en su OXXO más cercano al número de tarjeta [B]4198 2101 4671 1055[/B] (se le cobrará una comisión adicional de [B]$10 MXN[/B]).
+
+* [B]IMPORTANTE[/B]: No olvide indicar su número de teléfono [B]{}[/B] como referencia.'''.format(phone)
+                            }
+
+                    add_action('Su cuenta ha expirado', 'movies', ICON, FANART, info)
+                elif timestamp > expiration - datetime.timedelta( days = 5 ):
+                    xbmc.executebuiltin('Notification(PiTVStick, Su cuenta expira en {}, 5000)'.format(str(expiration - timestamp)))
+                else:
+                    valid = True
+
+            else:
+                xbmc.executebuiltin('Notification(PiTVStick, No se encontró el número telefónico., 5000)')
+                open_settings()
+    else:
+        valid = True
 
     return valid
 
@@ -236,8 +243,9 @@ def get_params():
             param={}
             for i in range(len(pairsofparams)):
                     splitparams={}
-                    splitparams=pairsofparams[i].split('=')
+                    splitparams=pairsofparams[i].split('=', 1)
                     if (len(splitparams))==2:
-                            param[splitparams[0]]=splitparams[1]
+                        param[splitparams[0]]=splitparams[1]
+                        
 
     return param
