@@ -78,6 +78,7 @@ def download_video(url, name, icon, fanart, year):
     xbmc.executebuiltin(r'xbmc.RunScript({}resources/lib/download.py,'.format(plugin_dir) + args + ')')
 
 def play_video(url):
+    url = urllib.unquote(url)
     if 'rapidvideo.com' in url:
         url = rapidvideo.get_video_url(url)
     elif 'mail.ru' in url:
@@ -102,7 +103,7 @@ def add_action(name, mode, icon, fanart=None, info=None):
     xbmcplugin.setContent(addon_handle, "video")
 
 def add_stream(name, id, stream_type, icon, fanart, info=None, downloads=False):
-    url = addon_path + "?&mode=play&media_id=" + id
+    url = addon_path + "?&mode=play&media_id=" + urllib.quote(id)
     if fanart == None: fanart = FANART
 
     listitem = xbmcgui.ListItem(name)
@@ -122,7 +123,7 @@ def add_stream(name, id, stream_type, icon, fanart, info=None, downloads=False):
 
 
 def add_dir(name, mode, id, icon, fanart=None, info=None, media_id=None, page=1, adults=False):
-    url = addon_path+"?id="+urllib.quote_plus(id)+"&mode="+str(mode)
+    url = addon_path + "?id=" + id + "&mode=" + str(mode)
     if media_id is not None: url += "&media_id=%s" % media_id
 
     url += "&page=%s" % page
@@ -201,6 +202,7 @@ def check_subscription():
                     add_action('Su cuenta ha expirado', 'movies', ICON, FANART, info)
                 elif timestamp > expiration - datetime.timedelta( days = 5 ):
                     xbmc.executebuiltin('Notification(PiTVStick, Su cuenta expira en {}, 5000)'.format(str(expiration - timestamp)))
+                    valid = True
                 else:
                     valid = True
 

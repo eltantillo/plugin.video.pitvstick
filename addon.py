@@ -28,7 +28,6 @@ if mode == 'settings':
     open_settings()
 
 elif mode == 'play':
-    xbmc.log("URLLLLLLLLLLLLLLLLLLLLL: " + media_id)
     play_video(media_id)
 
 elif mode == 'download':
