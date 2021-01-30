@@ -4,7 +4,7 @@ import urllib
 import xbmc, xbmcplugin, xbmcaddon, xbmcgui
 import time, _strptime
 import datetime
-import rapidvideo, mailru, streamango
+import rapidvideo, mailru, streamango, damedamehoy
 
 ADDON   = xbmcaddon.Addon()
 ROOTDIR = ADDON.getAddonInfo('path')
@@ -87,6 +87,8 @@ def play_video(url):
         url = pelisplus.get_video_url(url)
     elif 'streamango.com' in url:
         url = streamango.get_video_url(url)
+    elif 'damedamehoy.xyz' in url:
+        url = damedamehoy.get_video_url(url)
 
     playitem = xbmcgui.ListItem(path=url)
     playitem.setPath(url)
